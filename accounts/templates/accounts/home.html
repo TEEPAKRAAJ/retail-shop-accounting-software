@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block title %}Account Management{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white min-h-screen flex items-center justify-center" style="background-image: url('{% static 'accounts/images/bg.png' %}'); background-size:cover; background-position:center; background-repeat:no-repeat; width:100vw; height:100vh;">
+  <div class="bg-white p-8 rounded shadow-md w-full max-w-md text-center">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mb-4 p-2 rounded bg-green-100 text-green-800">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if user.is_authenticated %}
+      <h2 class="text-2xl font-bold mb-4">Welcome, {{ user.username }}!</h2>
+      <div class="flex flex-col space-y-3 mb-4">
+        <a href="{% url 'add_sale' %}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition">
+          ➕ Add Sale
+        </a>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded transition">
+          Logout
+        </button>
+      </form>
+      {% else %}
+      <h2 class="text-2xl font-bold mb-4">Welcome to Account Management</h2>
+      <a href="{% url 'login' %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition mr-2">
+        Login
+      </a>
+      <a href="{% url 'signup' %}" class="bg-white text-black hover:bg-gray-300 px-4 py-2 rounded transition">
+        Sign Up
+      </a>
+      
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Sale</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function updateTime() {
+      const now = new Date();
+      const formatted = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('live-time').textContent = formatted;
+    }
+    setInterval(updateTime, 1000);
+    window.onload = updateTime;
+  </script>
+</head>
+<body class="bg-white min-h-screen flex items-center justify-center"
+    style="background-image: url('{% static 'accounts/images/bg.png' %}'); background-size:cover; background-position:center; background-repeat:no-repeat; width:100vw; height:100vh;">
+  <div class="w-full max-w-2xl min-h-[80vh] bg-white rounded shadow-lg flex flex-col p-8">
+    <!-- Live Time -->
+    <div class="mb-4 text-right text-gray-500 text-sm">
+      <span id="live-time"></span>
+    </div>
+    <h2 class="text-xl font-bold mb-4">Add Sale</h2>
+    <form method="post" class="mb-6">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+    </form>
+    <div class="flex-1 overflow-y-auto border-t pt-4">
+      <h3 class="text-lg font-semibold mb-2">Sales Log</h3>
+      <div class="space-y-2 max-h-80 overflow-y-auto">
+        {% for sale in sales_log %}
+          <div class="p-2 bg-gray-100 rounded shadow text-left">
+            <span class="font-semibold">{{ sale.date }}</span> |
+            <span>{{ sale.get_method_display }}</span> :
+            <span class="text-green-700 font-bold">{{ sale.amount }}</span>
+          </div>
+        {% empty %}
+          <div class="text-gray-400">No sales yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="flex justify-end mt-6">
+      <a href="{% url 'home' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded transition">
+        ← Back to Home
+      </a>
+    </div>
+  </div>
+</body>
+</html>
