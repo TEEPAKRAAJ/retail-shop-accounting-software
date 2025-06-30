@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Sale</title>
+  <title>Add Bill</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     function updateTime() {
@@ -27,11 +27,11 @@
     <div class="mb-4 text-right text-gray-500 text-sm">
       <span id="live-time"></span>
     </div>
-    <h2 class="text-xl font-bold mb-4">Add Sale</h2>
+    <h2 class="text-xl font-bold mb-4">Add Bill</h2>
     <form method="post" class="mb-6">
       {% csrf_token %}
       {{ form.as_p }}
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+      <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded">Submit</button>
     </form>
     <div class="flex-1 overflow-y-auto border-t pt-4">
       <h3 class="text-lg font-semibold mb-2">All Transactions Log</h3>

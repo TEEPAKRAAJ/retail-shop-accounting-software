@@ -9,11 +9,16 @@ class Shop(models.Model):
     def __str__(self):
         return self.shop_name
 
-class Sale(models.Model):
+class Transaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = [
+        ('sale', 'Sale'),
+        ('bill', 'Bill'),
+    ]
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
-    date = models.DateField(auto_now_add=True)
-    method = models.CharField(max_length=10, choices=[('gpay', 'GPay'), ('cash', 'Cash')])
+    date = models.DateField()
+    type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
+    category = models.CharField(max_length=100) 
     amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.shop.shop_name} - {self.method} - ₹{self.amount}"
+        return f"{self.shop.shop_name} - {self.type} - {self.category} - ₹{self.amount}"

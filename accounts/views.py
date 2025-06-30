@@ -3,8 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Shop, Sale
-from .forms import SaleForm
+from .models import Shop, Transaction
+from .forms import SaleForm, BillForm
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
@@ -31,7 +31,6 @@ def signup_view(request):
         form = UserCreationForm()
     return render(request, 'accounts/signup.html', {'form': form})
 
-
 @login_required
 def add_sale(request):
     try:
@@ -44,24 +43,58 @@ def add_sale(request):
         if form.is_valid():
             gpay = form.cleaned_data.get('gpay_amount')
             cash = form.cleaned_data.get('cash_amount')
-            today = timezone.now().date()
+            date = form.cleaned_data.get('date')
             if gpay:
-                Sale.objects.create(shop=shop, date=today, method='gpay', amount=gpay)
+                Transaction.objects.create(
+                    shop=shop, date=date, type='sale', category='GPay', amount=gpay
+                )
             if cash:
-                Sale.objects.create(shop=shop, date=today, method='cash', amount=cash)
+                Transaction.objects.create(
+                    shop=shop, date=date, type='sale', category='Cash', amount=cash
+                )
             return redirect('add_sale')
     else:
         form = SaleForm()
-    sales_log = Sale.objects.filter(shop=shop).order_by('-date')
-    return render(request, 'accounts/add_sale.html', {'form': form, 'sales_log': sales_log, 'now': timezone.now()})
-
+    logs = Transaction.objects.filter(shop=shop).order_by('-date')
+    return render(request, 'accounts/add_sale.html', {'form': form, 'logs': logs, 'now': timezone.now()})
 
 @login_required
-def sale_list(request):
-    shop = Shop.objects.get(owner=request.user)
-    sales = Sale.objects.filter(shop=shop).order_by('-date')
-    return render(request, 'account/sale_list.html', {'sales': sales})
-
+def add_bill(request):
+    try:
+        shop = Shop.objects.get(owner=request.user)
+    except Shop.DoesNotExist:
+        messages.error(request, "You do not have a shop. Please contact admin.")
+        return redirect('home')
+    if request.method == 'POST':
+        form = BillForm(request.POST)
+        if form.is_valid():
+            date = form.cleaned_data.get('date')
+            bill_fields = [
+                ('restocking', 'Restocking'),
+                ('rent', 'Rent'),
+                ('EB_bills', 'EB Bills'),
+                ('wifi', 'WiFi'),
+                ('petrol', 'Petrol'),
+                ('labor', 'Labor'),
+            ]
+            for field, label in bill_fields:
+                amount = form.cleaned_data.get(field)
+                if amount:
+                    Transaction.objects.create(
+                        shop=shop, date=date, type='bill', category=label, amount=amount
+                    )
+            # Handle "other" category
+            other_category = form.cleaned_data.get('other_category')
+            other_amount = form.cleaned_data.get('other_amount')
+            if other_category and other_amount:
+                Transaction.objects.create(
+                    shop=shop, date=date, type='bill', category=other_category, amount=other_amount
+                )
+            return redirect('add_bill')
+    else:
+        form = BillForm()
+    logs = Transaction.objects.filter(shop=shop).order_by('-date')
+    return render(request, 'accounts/add_bill.html', {'form': form, 'logs': logs, 'now': timezone.now()})
 
 @require_POST
 def logout_view(request):
