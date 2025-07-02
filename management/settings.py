@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'theme',
-    'widget_tweaks',
 ]
 
 TAILWIND_APP_NAME = 'theme'
