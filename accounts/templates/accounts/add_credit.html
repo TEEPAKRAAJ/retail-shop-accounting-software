@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Credit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function updateTime() {
+      const now = new Date();
+      const formatted = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('live-time').textContent = formatted;
+    }
+    setInterval(updateTime, 1000);
+    window.onload = updateTime;
+  </script>
+</head>
+<body class="bg-white min-h-screen flex items-center justify-center"
+      style="background-image: url('{% static 'accounts/images/bg.png' %}'); background-size:cover; background-position:center; background-repeat:no-repeat;">
+  <div class="flex flex-col w-full max-w-3xl min-h-[80vh] bg-white rounded shadow-lg p-4 sm:p-6 md:p-8 gap-8">
+    <div class="w-full flex flex-col md:flex-row gap-8 flex-1">
+      <!-- Left: Credit Form and Credit Table Log -->
+      <div class="flex-1 flex flex-col">
+        <div class="mb-4 text-right text-gray-700 text-base">
+          <!-- Live Time -->
+          <div class="mb-4 text-right text-gray-500 text-sm w-full">
+            <span id="live-time"></span>
+          </div>
+          <span class="font-semibold">GPay Holding:</span> ₹{{ shop.holding_gpay }}<br>
+          <span class="font-semibold">Cash Holding:</span> ₹{{ shop.holding_cash }}<br>
+          <span class="font-semibold">Load/Credit:</span> ₹{{ shop.credit }}
+        </div>
+        <h2 class="text-xl font-bold mb-4">Add Credit</h2>
+        {% if messages %}
+        <div class="mb-4">
+          {% for message in messages %}
+            <div class="px-4 py-2 rounded 
+                        {% if message.tags == 'success' %}bg-green-100 text-green-800
+                        {% elif message.tags == 'error' %}bg-red-100 text-red-800
+                        {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <form method="post" class="mb-6">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
+        </form>
+        <div class="border-t pt-4 max-h-40 overflow-y-auto">
+          <h3 class="text-lg font-semibold mb-2">Credit Table (Current Balances)</h3>
+          <div class="space-y-2">
+            {% for credit in credits %}
+              <div class="p-2 bg-gray-100 rounded shadow text-left">
+                <span class="font-semibold">{{ credit.name }}</span> |
+                <span>{% if credit.is_lender %}Lender{% else %}Receiver{% endif %}</span> |
+                <span>₹{{ credit.balance }}</span>
+                {% if credit.repaid %}<span class="text-green-700 font-bold">[REPAID]</span>{% endif %}
+              </div>
+            {% empty %}
+              <div class="text-gray-400">No credits yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <!-- Right: CreditLog Table -->
+      <div class="flex-1 flex flex-col border-l pl-4">
+        <h3 class="text-lg font-semibold mb-2">Credit Log (All Transactions)</h3>
+        <div class="space-y-2 max-h-96 overflow-y-auto">
+          {% for log in logs %}
+            <div class="p-2 bg-gray-100 rounded shadow text-left">
+              <span class="font-semibold">{{ log.date|date:"Y-m-d H:i" }}</span> |
+              <span>{{ log.credit.name }}</span> |
+              <span>{% if log.credit.is_lender %}Lender{% else %}Receiver{% endif %}</span> |
+              <span>₹{{ log.amount }}</span> |
+              <span>{{ log.mode_of_payment }}</span>
+              {% if log.remarks %}| <span>{{ log.remarks }}</span>{% endif %}
+            </div>
+          {% empty %}
+            <div class="text-gray-400">No credit logs yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <!-- Back to Home button INSIDE the white box -->
+    <div class="flex justify-end mt-6">
+      <a href="{% url 'home' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded transition">
+        ← Back to Home
+      </a>
+    </div>
+  </div>
+</body>
+</html>
