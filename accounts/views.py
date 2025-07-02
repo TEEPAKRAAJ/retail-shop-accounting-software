@@ -185,7 +185,8 @@ def add_credit(request):
                 is_lender=is_lender,
                 amount=amount,
                 remarks=remarks,
-                date=date
+                date=date,
+                mode_of_payment=mode_of_payment
             )
             messages.success(request, "Credit entry added/updated successfully.")
             return redirect('add_credit')

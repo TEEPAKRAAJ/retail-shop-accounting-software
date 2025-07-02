@@ -76,9 +76,9 @@
         <div class="space-y-2 max-h-96 overflow-y-auto">
           {% for log in logs %}
             <div class="p-2 bg-gray-100 rounded shadow text-left">
-              <span class="font-semibold">{{ log.date|date:"Y-m-d H:i" }}</span> |
-              <span>{{ log.credit.name }}</span> |
+              <span class="font-semibold">{{ log.date|date:"d-m-Y" }}</span> |
               <span>{% if log.credit.is_lender %}Lender{% else %}Receiver{% endif %}</span> |
+              <span>{{ log.credit.name }}</span> |
               <span>₹{{ log.amount }}</span> |
               <span>{{ log.mode_of_payment }}</span>
               {% if log.remarks %}| <span>{{ log.remarks }}</span>{% endif %}
