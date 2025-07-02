@@ -1,10 +1,15 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Sale</title>
+  <title>Sale Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body {
+      height: 100%;
+      overflow-y: auto;
+    }
+  </style>
   <script>
     function updateTime() {
       const now = new Date();
@@ -20,62 +25,126 @@
     window.onload = updateTime;
   </script>
 </head>
-<body class="bg-white min-h-screen flex items-center justify-center"
-      style="background-image: url('{% static 'accounts/images/bg.png' %}'); background-size:cover; background-position:center; background-repeat:no-repeat; width:100vw; height:100vh;">
-      <div class="w-full max-w-2xl min-h-[80vh] bg-white rounded shadow-lg flex flex-col p-8">
-        <!-- Live Time -->
-        <div class="mb-4 text-right text-gray-500 text-sm">
-          <span id="live-time"></span>
-        </div>
-        <!-- Holdings Display -->
-        <div class="mb-4 text-right text-gray-700 text-base">
-          <span class="font-semibold">GPay Holding:</span> ₹{{ shop.holding_gpay }}<br>
-          <span class="font-semibold">Cash Holding:</span> ₹{{ shop.holding_cash }}<br>
-          <span class="font-semibold">Load/Credit:</span> ₹{{ shop.credit }}
-        </div>
-        <h2 class="text-xl font-bold mb-4">Add Sale</h2>
-        <!-- Message Display -->
-    {% if messages %}
-    <div class="mb-4">
-      {% for message in messages %}
-        <div class="px-4 py-2 rounded 
-                    {% if message.tags == 'success' %}bg-green-100 text-green-800
-                    {% elif message.tags == 'error' %}bg-red-100 text-red-800
-                    {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800
-                    {% else %}bg-blue-100 text-blue-800{% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
+<body class="min-h-screen bg-slate-200 overflow-x-hidden overflow-y-auto">
+
+  <div class="relative z-10 container mx-auto p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text drop-shadow">
+          Sale Management
+        </h1>
+        <p class="text-gray-700 text-lg mt-1">Manage your financial transactions with ease</p>
+      </div>
+      <div class="flex items-center gap-2 bg-white/80 backdrop-blur-lg px-4 py-2 rounded-xl shadow-md border">
+        <span class="text-blue-600 font-semibold">Live Time:</span>
+        <span id="live-time" class="font-mono text-gray-800"></span>
+      </div>
     </div>
-    {% endif %}
-        <form method="post" class="mb-6">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
-        </form>
-        <div class="flex-1 overflow-y-auto border-t pt-4">
-          <h3 class="text-lg font-semibold mb-2">All Transactions Log</h3>
-          <div class="space-y-2 max-h-80 overflow-y-auto">
+
+    <!-- Holdings Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
+        <p class="text-sm text-gray-500 uppercase">GPay Holding</p>
+        <p class="text-2xl font-bold text-blue-900">₹{{ shop.holding_gpay }}</p>
+      </div>
+      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
+        <p class="text-sm text-gray-500 uppercase">Cash Holding</p>
+        <p class="text-2xl font-bold text-cyan-600">₹{{ shop.holding_cash }}</p>
+      </div>
+      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
+        <p class="text-sm text-gray-500 uppercase">Load / Credit</p>
+        <p class="text-2xl font-bold text-purple-800">₹{{ shop.credit }}</p>
+      </div>
+    </div>
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 gap-10">
+      <!-- Left: Sale Form -->
+      <div>
+        <div class="bg-white/90 p-6 rounded-xl shadow-xl">
+          <h2 class="text-2xl font-bold mb-4">Add Sale</h2>
+          {% if messages %}
+            {% for message in messages %}
+              <div class="mb-4 px-4 py-2 rounded text-sm font-medium
+                          {% if message.tags == 'success' %}bg-green-100 text-green-800
+                          {% elif message.tags == 'error' %}bg-red-100 text-red-800
+                          {% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+          <form method="post" class="mb-6">
+            {% csrf_token %}
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36">GPay Amount:</span>
+                {{ form.gpay_amount }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36">Cash Amount:</span>
+                {{ form.cash_amount }}
+              </div>
+              <div class="flex items-center gap-2">
+                {{ form.date.label_tag }} {{ form.date }}
+              </div>
+            </div>
+            <button type="submit"
+              class="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white font-bold py-3 rounded-xl hover:scale-105 shadow-md transition-all duration-300">
+              Add Sale
+            </button>
+          </form>
+        </div>
+      </div>
+    
+      <!-- Right: Transaction Log (Scrollable, aligned) -->
+      <div>
+        <div class="bg-white/90 p-6 rounded-xl shadow-xl max-h-[40rem] overflow-y-auto">
+          <h3 class="text-lg font-bold mb-4">Transaction Log</h3>
+          <div class="space-y-2">
             {% for log in logs %}
-    <div class="p-2 bg-gray-100 rounded shadow text-left">
-      <span class="font-semibold">{{ log.date }}</span> |
-      <span>{{ log.type|title }}</span> |
-      <span>{{ log.category }}</span>
-      {% if log.type == 'bill' %}
-        | <span>{{ log.mode_of_payment }}</span>
-      {% endif %}
-      : <span class="text-green-700 font-bold">{{ log.amount }}</span>
-    </div>
-  {% empty %}
-    <div class="text-gray-400">No transactions yet.</div>
-  {% endfor %}
-</div>
+              <div class="bg-gradient-to-r from-gray-100 to-gray-100 rounded-xl p-4 mb-3 shadow transition hover:scale-[1.01] hover:shadow-lg">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                  <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-1">
+                    <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">
+                      {{ log.date|date:"d-m-Y" }}
+                    </span>
+                    <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-semibold capitalize">
+                      {{ log.type }}
+                    </span>
+                    <span class="inline-block px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold capitalize">
+                      {{ log.mode_of_payment }}
+                    </span>
+                  </div>
+                  {% if log.type == "bill" %}
+                    <div class="flex-1 font-semibold text-black">
+                      {{ log.category }}
+                    </div>
+                    <div class="font-bold text-xl text-red-700">
+                      ₹{{ log.amount }}
+                    </div>
+                  {% else %}
+                  <div class="font-bold text-xl text-green-700">
+                    ₹{{ log.amount }}
+                  </div>
+                  {% endif %}
+                  
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-gray-400">No sale logs available.</p>
+            {% endfor %}
+          </div>
         </div>
-        <div class="flex justify-end mt-6">
-          <a href="{% url 'home' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded transition">
-            ← Back to Home
-          </a>
-        </div>
+      </div>
     </div>
-    </body>
-    </html>
+
+    <!-- Back Button -->
+    <div class="flex justify-center mt-10">
+      <a href="{% url 'home' %}" class="bg-white border shadow-md px-6 py-3 rounded-xl hover:bg-gray-100 hover:scale-110 hover:shadow-lg hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-700 transition">
+        ← Back to Home
+      </a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,34 +1,43 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Shop, Transaction, CreditDue, CreditLog
-from .forms import SaleForm, BillForm, CreditForm
+from .forms import SaleForm, BillForm, CreditForm, StyledUserCreationForm, StyledAuthenticationForm
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.contrib.auth import authenticate, login
 
 def home(request):
     #messages.info(request, "Test message")
     return render(request, 'accounts/home.html')
 
+def login_view(request):
+    if request.method == 'POST':
+        form = StyledAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, "Login successful!")
+            return redirect('home')
+        else:
+            messages.error(request, "Invalid username or password.")
+    else:
+        form = StyledAuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form})
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = StyledUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = form.cleaned_data.get('username')
             user.save()
-            print("User saved")
             login(request, user)
-            print("User logged in")
             return redirect('home')
-        else:
-            print("Form invalid:", form.errors)
     else:
-        form = UserCreationForm()
+        form = StyledUserCreationForm()
     return render(request, 'accounts/signup.html', {'form': form})
 
 @login_required

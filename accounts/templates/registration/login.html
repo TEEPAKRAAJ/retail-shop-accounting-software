@@ -1,17 +1,32 @@
-{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Login</title>
+  <meta charset="UTF-8">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-white flex items-center justify-center min-h-screen" style="background-image: url('{% static 'accounts/images/bg.png' %}'); background-size:cover; background-position:center; background-repeat:no-repeat; width:100vw; height:100vh;">
-  <div class="bg-white opacity-90 p-8 rounded shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
-    <form method="post" class="space-y-4">
+<body class="bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white/90 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-blue-100">
+    <h2 class="text-3xl font-bold mb-6 text-center text-transparent bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text drop-shadow">
+      Login
+    </h2>
+    <form method="post" class="font-semibold space-y-5">
       {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Login</button>
+      {% for field in form %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}
+            <small class="text-gray-500">{{ field.help_text }}</small>
+          {% endif %}
+          {% for error in field.errors %}
+            <div class="text-red-600 text-xs">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white py-2 rounded-xl font-bold shadow-md hover:scale-105 transition">
+        Login
+      </button>
     </form>
     <p class="mt-4 text-center text-gray-600">
       Don't have an account?
