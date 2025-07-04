@@ -9,6 +9,8 @@ from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
+from django.db.models import Sum
+
 
 def home(request):
     #messages.info(request, "Test message")
@@ -55,12 +57,12 @@ def add_sale(request):
             date = form.cleaned_data.get('date')
             if gpay:
                 Transaction.objects.create(
-                    shop=shop, date=date, type='sale', category='GPay', amount=gpay, mode_of_payment='GPay'
+                    shop=shop, date=date, type='sale', category='Sale', amount=gpay, mode_of_payment='GPay'
                 )
                 shop.holding_gpay += gpay
             if cash:
                 Transaction.objects.create(
-                    shop=shop, date=date, type='sale', category='Cash', amount=cash, mode_of_payment='Cash'
+                    shop=shop, date=date, type='sale', category='Sale', amount=cash, mode_of_payment='Cash'
                 )
                 shop.holding_cash += cash
             shop.save()
@@ -208,6 +210,111 @@ def add_credit(request):
         'logs': logs,
         'credits': credits,
         'shop': shop
+    })
+
+@login_required
+def search(request):
+    summary = None
+    logs = None
+    query = ''
+    shop = None
+    if hasattr(request.user, 'shop'):
+        shop = request.user.shop
+    else:
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            shop = None
+
+    if request.method == 'POST':
+        query = request.POST.get('query', '').strip()
+        if query:
+            # Filter transactions for the given date (YYYY-MM-DD)
+            logs = Transaction.objects.filter(shop__owner=request.user, date__icontains=query)
+            # Summary: sum amounts grouped by category and mode_of_payment
+            summary = (
+                logs.values('category', 'mode_of_payment')
+                .annotate(total_amount=Sum('amount'))
+                .order_by('category', 'mode_of_payment')
+            )
+        else:
+            messages.error(request, "Please enter a valid search term.")
+    return render(request, 'accounts/search.html', {
+        'summary': summary,
+        'logs': logs,
+        'query': query,
+        'shop': shop,
+    })
+
+from django.utils import timezone
+
+@login_required
+def monthly_report(request):
+    shop = Shop.objects.get(owner=request.user)
+    summary = None
+    logs = None
+    month = ''
+    year = ''
+    if request.method == 'POST':
+        month = request.POST.get('month', '').strip()
+        year = request.POST.get('year', '').strip()
+        if month and year:
+            try:
+                month = int(month)
+                year = int(year)
+                logs = Transaction.objects.filter(
+                    shop=shop,
+                    date__year=year,
+                    date__month=month
+                ).order_by('-date')
+                summary = (
+                    logs.values('category', 'mode_of_payment')
+                    .annotate(total_amount=Sum('amount'))
+                    .order_by('category', 'mode_of_payment')
+                )
+            except ValueError:
+                messages.error(request, "Invalid month or year.")
+        else:
+            messages.error(request, "Please enter both month and year.")
+    # No default data shown until form is submitted
+    return render(request, 'accounts/monthly_report.html', {
+        'summary': summary,
+        'logs': logs,
+        'month': month,
+        'year': year,
+        'shop': shop,
+    })
+
+@login_required
+def yearly_report(request):
+    shop = Shop.objects.get(owner=request.user)
+    summary = None
+    logs = None
+    year = ''
+    if request.method == 'POST':
+        year = request.POST.get('year', '').strip()
+        if year:
+            try:
+                year = int(year)
+                logs = Transaction.objects.filter(
+                    shop=shop,
+                    date__year=year
+                ).order_by('-date')
+                summary = (
+                    logs.values('category', 'mode_of_payment')
+                    .annotate(total_amount=Sum('amount'))
+                    .order_by('category', 'mode_of_payment')
+                )
+            except ValueError:
+                messages.error(request, "Invalid year.")
+        else:
+            messages.error(request, "Please enter a year.")
+    # No default data shown until form is submitted
+    return render(request, 'accounts/yearly_report.html', {
+        'summary': summary,
+        'logs': logs,
+        'year': year,
+        'shop': shop,
     })
 
 @require_POST

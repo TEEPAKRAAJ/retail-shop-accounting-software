@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-200 overflow-x-hidden overflow-y-auto">
+
+  <div class="relative z-10 container mx-auto p-6">
+    <!-- Message Box -->
+    {% if messages %}
+      <div class="mb-6 max-w-2xl mx-auto">
+        {% for message in messages %}
+          <div class="px-4 py-3 rounded-xl shadow text-sm font-medium
+            {% if message.tags == 'success' %}bg-green-100 text-green-800
+            {% elif message.tags == 'error' %}bg-red-100 text-red-800
+            {% else %}bg-blue-100 text-blue-800{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text drop-shadow">
+          Monthly Report
+        </h1>
+        <p class="text-gray-700 text-lg mt-1">Summary and logs for this month</p>
+      </div>
+      <div class="flex items-center gap-2 bg-white/80 backdrop-blur-lg px-4 py-2 rounded-xl shadow-md border">
+        <!-- Clock SVG -->
+        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
+        </svg>
+        <span id="live-time" class="font-mono text-gray-800"></span>
+      </div>
+    </div>
+
+    <!-- Holdings Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
+        <p class="text-sm text-gray-500 uppercase">GPay Holding</p>
+        <p class="text-2xl font-bold text-blue-900">₹{{ shop.holding_gpay }}</p>
+      </div>
+      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
+        <p class="text-sm text-gray-500 uppercase">Cash Holding</p>
+        <p class="text-2xl font-bold text-cyan-600">₹{{ shop.holding_cash }}</p>
+      </div>
+      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
+        <p class="text-sm text-gray-500 uppercase">Load / Credit</p>
+        <p class="text-2xl font-bold text-purple-800">₹{{ shop.credit }}</p>
+      </div>
+    </div>
+
+    <form method="post" class="mb-8 flex flex-col md:flex-row gap-4 items-center bg-white/90 p-6 rounded-xl shadow-lg">
+        {% csrf_token %}
+        <input type="number" name="month" min="1" max="12" placeholder="Month (1-12)" value="{{ month|default:'' }}"
+          class="w-48 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white font-mono text-lg" />
+        <input type="number" name="year" min="2000" max="2100" placeholder="Year (e.g. 2025)" value="{{ year|default:'' }}"
+          class="w-60 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white font-mono text-lg" />
+        <button type="submit"
+          class="bg-gradient-to-r from-blue-600 to-purple-700 text-white font-bold px-6 py-2 rounded-xl shadow-md hover:scale-105 transition-all duration-300">
+          Filter
+        </button>
+      </form>
+
+    <!-- Summary Report -->
+    {% if summary %}
+<div class="bg-white/90 p-6 rounded-xl shadow-xl mb-8">
+  <h3 class="text-xl font-bold mb-4 text-blue-700">Summary Report</h3>
+  <div class="overflow-x-auto">
+    <table class="min-w-full rounded-xl shadow">
+      <thead>
+        <tr class="bg-gray-300 text-blue-900">
+          <th class="px-6 py-3 text-left font-semibold rounded-tl-xl">Category</th>
+          <th class="px-6 py-3 text-left font-semibold">Mode</th>
+          <th class="px-6 py-3 text-right font-semibold rounded-tr-xl">Total Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summary %}
+          <tr class="border-b hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition">
+            <td class="px-6 py-3 text-blue-700 font-medium">{{ row.category|capfirst }}</td>
+            <td class="px-6 py-3 text-purple-800 font-medium">{{ row.mode_of_payment|capfirst }}</td>
+            <td class="px-6 py-3 font-bold text-right {% if row.category|lower == 'sale' %}text-green-700{% else %}text-red-600{% endif %}">
+              ₹{{ row.total_amount }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+    <!-- Transaction Log -->
+    {% if logs %}
+      <div class="bg-white/90 p-6 rounded-xl shadow-xl max-h-[40rem] overflow-y-auto">
+        <h3 class="text-xl font-bold mb-4 text-purple-700">Transaction Log</h3>
+        <div class="space-y-2">
+          {% for log in logs %}
+            <div class="bg-gradient-to-r from-gray-100 to-gray-100 rounded-xl p-4 mb-3 shadow transition hover:scale-[1.01] hover:shadow-lg">
+              <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-1">
+                  <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">
+                    {{ log.date|date:"d-m-Y" }}
+                  </span>
+                  <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-semibold capitalize">
+                    {{ log.type }}
+                  </span>
+                  <span class="inline-block px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold capitalize">
+                    {{ log.mode_of_payment }}
+                  </span>
+                  {% if log.category %}
+                    <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 font-semibold capitalize">
+                      {{ log.category }}
+                    </span>
+                  {% endif %}
+                </div>
+                <div class="font-bold text-xl text-blue-700">
+                  ₹{{ log.amount }}
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-gray-400">No transactions found for this month.</p>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="flex justify-center mt-10">
+        <a href="{% url 'home' %}" class="bg-white border shadow-md px-6 py-3 rounded-xl hover:bg-gray-100 hover:scale-110 hover:shadow-lg hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-700 transition">
+            ← Back to Home
+          </a>
+    </div>
+  </div>
+  <script>
+    function updateTime() {
+      const now = new Date();
+      const formatted = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('live-time').textContent = formatted;
+    }
+    setInterval(updateTime, 1000);
+    window.onload = updateTime;
+  </script>
+</body>
+</html>
