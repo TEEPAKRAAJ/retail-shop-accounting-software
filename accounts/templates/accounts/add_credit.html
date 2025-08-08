@@ -1,13 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8">
   <title>Credit Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
     html, body {
       height: 100%;
       overflow-y: auto;
+    }
+    .log-item {
+      transition: all 0.3s ease;
+    }
+    .log-item:hover {
+      transform: translateX(-5px);
+    }
+    .delete-btn {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .log-item:hover .delete-btn {
+      opacity: 1;
+    }
+    .dark .log-item {
+      background: linear-gradient(to right, #1f2937, #374151);
+    }
+    .dark .log-item:hover {
+      background: linear-gradient(to right, #374151, #4b5563);
     }
   </style>
   <script>
@@ -23,171 +60,234 @@
     }
     setInterval(updateTime, 1000);
     window.onload = updateTime;
+
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      html.classList.toggle('dark');
+      localStorage.setItem('darkMode', !isDark);
+    }
+
+    // Load dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+
+    function deleteCreditLog(logId) {
+      if (confirm('Are you sure you want to delete this credit log? This action cannot be undone.')) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(`/delete_credit_log/${logId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const logElement = document.getElementById(`credit-log-${logId}`);
+            if (logElement) {
+              logElement.remove();
+            }
+            location.reload();
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while deleting the credit log.');
+        });
+      }
+    }
   </script>
 </head>
-<body class="min-h-screen bg-slate-200 overflow-x-hidden overflow-y-auto">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
 
   <div class="relative z-10 container mx-auto p-6">
-    <!-- Header -->
+    <!-- Header with Dark Mode Toggle -->
     <div class="flex justify-between items-center mb-8">
       <div>
         <h1 class="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text drop-shadow">
           Credit Management
         </h1>
-        <p class="text-gray-700 text-lg mt-1">Manage your financial transactions with ease</p>
+        <p class="text-gray-700 dark:text-gray-300 text-lg mt-1">Manage your financial transactions with ease</p>
       </div>
-      <div class="flex items-center gap-2 bg-white/80 backdrop-blur-lg px-4 py-2 rounded-xl shadow-md border">
-        <!-- Clock SVG -->
-        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
-        </svg>
-        <span id="live-time" class="font-mono text-gray-800"></span>
+      <div class="flex items-center gap-4">
+        <button onclick="toggleDarkMode()" 
+                class="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-105 transition-all duration-200">
+          <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <div class="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg px-4 py-2 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
+          </svg>
+          <span id="live-time" class="font-mono text-gray-800 dark:text-gray-200"></span>
+        </div>
       </div>
     </div>
 
     <!-- Holdings Overview -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
-        <p class="text-sm text-gray-500 uppercase">GPay Holding</p>
-        <p class="text-2xl font-bold text-blue-900">₹{{ shop.holding_gpay }}</p>
+      <div class="bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase">GPay Holding</p>
+        <p class="text-2xl font-bold text-blue-900 dark:text-blue-400">₹{{ shop.holding_gpay }}</p>
       </div>
-      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
-        <p class="text-sm text-gray-500 uppercase">Cash Holding</p>
-        <p class="text-2xl font-bold text-cyan-600">₹{{ shop.holding_cash }}</p>
+      <div class="bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase">Cash Holding</p>
+        <p class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">₹{{ shop.holding_cash }}</p>
       </div>
-      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
-        <p class="text-sm text-gray-500 uppercase">Load / Credit</p>
-        <p class="text-2xl font-bold text-purple-800">₹{{ shop.credit }}</p>
+      <div class="bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase">Load / Credit</p>
+        <p class="text-2xl font-bold text-purple-800 dark:text-purple-400">₹{{ shop.credit }}</p>
       </div>
     </div>
 
     <!-- Grid Layout -->
-    <!-- ...existing header and holdings overview... -->
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-  <!-- Left: Form and Current Balances -->
-  <div class="space-y-8">
-    <!-- Add Credit Form -->
-    <div class="bg-white/90 p-6 rounded-xl shadow-xl">
-      <h2 class="text-2xl font-bold mb-4">Add Credit</h2>
-      {% if messages %}
-        {% for message in messages %}
-          <div class="mb-4 px-4 py-2 rounded text-sm font-medium
-                      {% if message.tags == 'success' %}bg-green-100 text-green-800
-                      {% elif message.tags == 'error' %}bg-red-100 text-red-800
-                      {% else %}bg-blue-100 text-blue-800{% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
-        <div>
-          {{ form.name.label_tag }}
-          {{ form.name }}
-        </div>
-        <div>
-          {{ form.is_lender.label_tag }}
-          {{ form.is_lender }}
-        </div>
-        <div>
-          {{ form.amount.label_tag }}
-          {{ form.amount }}
-        </div>
-        <div>
-          {{ form.remarks.label_tag }}
-          {{ form.remarks }}
-        </div>
-        <div>
-          {{ form.date.label_tag }}
-          {{ form.date }}
-        </div>
-        <div>
-          {{ form.mode_of_payment.label_tag }}
-          {{ form.mode_of_payment }}
-        </div>
-        <button type="submit"
-          class="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white font-bold py-3 rounded-xl hover:scale-105 shadow-md transition-all duration-300">
-          Add Credit
-        </button>
-      </form>
-    </div>
-
-    <!-- Current Balances (Scrollable) -->
-    <div class="bg-white/90 p-6 rounded-xl shadow-xl max-h-[40rem] overflow-y-auto">
-      <h3 class="text-lg font-bold mb-4">Current Balances</h3>
-      {% for credit in credits %}
-        <div class="flex justify-between items-center bg-gray-100 p-3 rounded-xl mb-2 hover:scale-[1.01] hover:shadow-lg shadow-sm">
-          <div class="flex flex-col">
-            <span class="font-bold">{{ credit.name }}</span>
-            <span class="text-xs text-gray-500">
-              <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold mr-1">
-                Start: {{ credit.start_date|date:"Y-m-d" }}
-              </span>
-              {% if credit.repaid and credit.end_date %}
-                <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 font-semibold ml-1">
-                  End: {{ credit.end_date|date:"Y-m-d" }}
-                </span>
-              {% endif %}
-            </span>
-          </div>
-          <div class="text-right">
-            <span class="font-bold {% if credit.balance < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
-              ₹{{ credit.balance }}
-            </span>
-            {% if credit.repaid %}
-              <span class="text-green-700 ml-2 font-semibold text-xs">[REPAID]</span>
-            {% endif %}
-          </div>
-        </div>
-      {% empty %}
-        <p class="text-gray-400">No credit entries available.</p>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- Right: Transaction Log (Scrollable) -->
-  <div class="bg-white/90 p-6 rounded-xl shadow-xl max-h-[40rem] overflow-y-auto">
-    <h3 class="text-lg font-bold mb-4">Transaction Log</h3>
-    {% for log in logs %}
-      <div class="bg-gradient-to-r from-gray-100 to-gray-100 rounded-xl p-4 mb-3 shadow transition hover:scale-[1.01] hover:shadow-lg">
-        <div class="flex justify-between items-center">
-          <div>
-            <div class="text-xs text-gray-500 mb-1 flex items-center gap-2">
-              <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">
-                {{ log.date|date:"d-m-Y" }}
-              </span>
-              {% if log.is_lender %}
-                <span class="inline-block px-2 py-0.5 rounded bg-red-100 text-red-700 font-semibold">Lender</span>
-              {% else %}
-                <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Receiver</span>
-              {% endif %}
-              <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-semibold capitalize">
-                {{ log.mode_of_payment }}
-              </span>
+    <div class="grid grid-cols-1 gap-10">
+      <!-- Left: Credit Form -->
+      <div>
+        <div class="bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Add Credit</h2>
+          {% if messages %}
+            {% for message in messages %}
+              <div class="mb-4 px-4 py-2 rounded text-sm font-medium
+                          {% if message.tags == 'success' %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
+                          {% elif message.tags == 'error' %}bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200
+                          {% else %}bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+          <form method="post" class="mb-6">
+            {% csrf_token %}
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36 text-gray-700 dark:text-gray-300">Name:</span>
+                {{ form.name }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36 text-gray-700 dark:text-gray-300">Type:</span>
+                {{ form.is_lender }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36 text-gray-700 dark:text-gray-300">Amount:</span>
+                {{ form.amount }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36 text-gray-700 dark:text-gray-300">Mode:</span>
+                {{ form.mode_of_payment }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36 text-gray-700 dark:text-gray-300">Remarks:</span>
+                {{ form.remarks }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold w-36 text-gray-700 dark:text-gray-300">Date:</span>
+                {{ form.date }}
+              </div>
             </div>
-            <div class="font-semibold text-black">{{ log.credit.name }}</div>
-            {% if log.remarks %}
-              <div class="italic text-sm text-black mt-1">"{{ log.remarks }}"</div>
-            {% endif %}
-          </div>
-          <div class="font-bold text-xl text-blue-700">
-            ₹{{ log.amount }}
-          </div>
+            <button type="submit"
+              class="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white font-bold py-3 rounded-xl hover:scale-105 shadow-md transition-all duration-300">
+              Add Credit
+            </button>
+          </form>
         </div>
       </div>
-    {% empty %}
-      <p class="text-gray-400">No credit logs available.</p>
-    {% endfor %}
-  </div>
+    
+      <!-- Right: Credit Log -->
+      <div>
+        <div class="bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200">Credit Log (Latest 20)</h3>
+          <div id="transactions-container" class="space-y-2">
+            {% for log in logs %}
+              <div id="credit-log-{{ log.id }}" class="log-item bg-gradient-to-r from-gray-100 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 mb-3 shadow transition hover:scale-[1.01] hover:shadow-lg relative">
+                <div class="flex justify-between items-center">
+                  <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <span class="inline-block px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-semibold">
+                      {{ log.date|date:"d-m-Y" }}
+                    </span>
+                    <span class="inline-block px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold capitalize">
+                      {{ log.credit.name }}
+                    </span>
+                    <span class="inline-block px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-semibold capitalize">
+                      {{ log.mode_of_payment }}
+                    </span>
+                    <span class="inline-block px-2 py-0.5 rounded {% if log.is_lender %}bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300{% else %}bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300{% endif %} font-semibold capitalize">
+                      {% if log.is_lender %}Lender{% else %}Receiver{% endif %}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="font-bold text-xl {% if log.is_lender %}text-red-700 dark:text-red-400{% else %}text-green-700 dark:text-green-400{% endif %}">
+                      ₹{{ log.amount }}
+                    </div>
+                    <button onclick="deleteCreditLog({{ log.id }})" 
+                            class="delete-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                {% if log.remarks %}
+                  <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <strong>Remarks:</strong> {{ log.remarks }}
+                  </div>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p class="text-gray-400 dark:text-gray-500">No credit logs available.</p>
+            {% endfor %}
+          </div>
+          
+          {% if total_count > 20 %}
+            <div class="mt-4 text-center">
+              <p class="text-gray-600 dark:text-gray-400 text-sm">
+                Showing latest 20 of {{ total_count }} credit logs
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
 
-<!-- Back Button -->
-<div class="flex justify-center mt-10">
-  <a href="{% url 'home' %}" class="bg-white border shadow-md px-6 py-3 rounded-xl hover:bg-gray-100 hover:scale-110 hover:shadow-lg hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-700 transition">
-    ← Back to Home
-  </a>
-</div>
+    <!-- Credit Summary -->
+    {% if credits %}
+      <div class="bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-bold mb-4 text-purple-700 dark:text-purple-400">Credit Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for credit in credits %}
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-200">{{ credit.name }}</h4>
+                <span class="text-xs px-2 py-1 rounded {% if credit.repaid %}bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300{% else %}bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300{% endif %}">
+                  {% if credit.repaid %}Repaid{% else %}Pending{% endif %}
+                </span>
+              </div>
+              <div class="text-lg font-bold {% if credit.balance < 0 %}text-red-600 dark:text-red-400{% else %}text-green-600 dark:text-green-400{% endif %}">
+                ₹{{ credit.balance }}
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Started: {{ credit.start_date|date:"d-m-Y" }}
+                {% if credit.end_date %}
+                  <br>Ended: {{ credit.end_date|date:"d-m-Y" }}
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="flex justify-center mt-10">
+      <a href="{% url 'home' %}" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md px-6 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-110 hover:shadow-lg text-gray-700 dark:text-gray-300 transition">
+        ← Back to Home
+      </a>
+    </div>
   </div>
 </body>
 </html>

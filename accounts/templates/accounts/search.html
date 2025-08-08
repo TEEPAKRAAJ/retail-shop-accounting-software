@@ -1,9 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8">
   <title>Transaction Search</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
     html, body {
       height: 100%;
@@ -23,42 +41,63 @@
     }
     setInterval(updateTime, 1000);
     window.onload = updateTime;
+
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      html.classList.toggle('dark');
+      localStorage.setItem('darkMode', !isDark);
+    }
+
+    // Load dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
   </script>
 </head>
-<body class="min-h-screen bg-slate-200 overflow-x-hidden overflow-y-auto">
+<body class="min-h-screen bg-slate-200 dark:bg-gray-900 overflow-x-hidden overflow-y-auto transition-colors duration-300">
 
   <div class="relative z-10 container mx-auto p-6">
     <!-- Header -->
     <div class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text drop-shadow">
+        <h1 class="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400 bg-clip-text drop-shadow">
           Transaction Search
         </h1>
-        <p class="text-gray-700 text-lg mt-1">Find and review your transactions by date</p>
+        <p class="text-gray-700 dark:text-gray-300 text-lg mt-1">Find and review your transactions by date</p>
       </div>
-      <div class="flex items-center gap-2 bg-white/80 backdrop-blur-lg px-4 py-2 rounded-xl shadow-md border">
-        <!-- Clock SVG -->
-        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
-        </svg>
-        <span id="live-time" class="font-mono text-gray-800"></span>
+      <div class="flex items-center gap-4">
+        <!-- Dark Mode Toggle -->
+        <button onclick="toggleDarkMode()" 
+                class="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-105 transition-all duration-200">
+          <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <div class="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg px-4 py-2 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+          <!-- Clock SVG -->
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
+          </svg>
+          <span id="live-time" class="font-mono text-gray-800 dark:text-gray-200"></span>
+        </div>
       </div>
     </div>
 
     <!-- Holdings Overview -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
-        <p class="text-sm text-gray-500 uppercase">GPay Holding</p>
-        <p class="text-2xl font-bold text-blue-900">₹{{ shop.holding_gpay }}</p>
+      <div class="bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase">GPay Holding</p>
+        <p class="text-2xl font-bold text-blue-900 dark:text-blue-400">₹{{ shop.holding_gpay }}</p>
       </div>
-      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
-        <p class="text-sm text-gray-500 uppercase">Cash Holding</p>
-        <p class="text-2xl font-bold text-cyan-600">₹{{ shop.holding_cash }}</p>
+      <div class="bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase">Cash Holding</p>
+        <p class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">₹{{ shop.holding_cash }}</p>
       </div>
-      <div class="bg-white/90 rounded-xl p-6 shadow-lg">
-        <p class="text-sm text-gray-500 uppercase">Load / Credit</p>
-        <p class="text-2xl font-bold text-purple-800">₹{{ shop.credit }}</p>
+      <div class="bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 uppercase">Load / Credit</p>
+        <p class="text-2xl font-bold text-purple-800 dark:text-purple-400">₹{{ shop.credit }}</p>
       </div>
     </div>
 
@@ -67,9 +106,9 @@
       <div class="mb-6 max-w-2xl mx-auto">
         {% for message in messages %}
           <div class="px-4 py-3 rounded-xl shadow text-sm font-medium
-            {% if message.tags == 'success' %}bg-green-100 text-green-800
-            {% elif message.tags == 'error' %}bg-red-100 text-red-800
-            {% else %}bg-blue-100 text-blue-800{% endif %}">
+            {% if message.tags == 'success' %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
+            {% elif message.tags == 'error' %}bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200
+            {% else %}bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200{% endif %}">
             {{ message }}
           </div>
         {% endfor %}
@@ -77,10 +116,10 @@
     {% endif %}
 
     <!-- Search Form -->
-    <form method="post" class="mb-8 flex flex-col md:flex-row gap-4 items-center bg-white/90 p-6 rounded-xl shadow-lg">
+    <form method="post" class="mb-8 flex flex-col md:flex-row gap-4 items-center bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
       {% csrf_token %}
       <input type="text" name="query" placeholder="YYYY-MM-DD" value="{{ query }}"
-        class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white font-mono text-lg" />
+        class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-400 focus:outline-none bg-white dark:bg-gray-700 font-mono text-lg text-gray-800 dark:text-gray-200" />
       <button type="submit"
         class="bg-gradient-to-r from-blue-600 to-purple-700 text-white font-bold px-6 py-2 rounded-xl shadow-md hover:scale-105 transition-all duration-300">
         Search
@@ -89,12 +128,12 @@
 
     <!-- Summary Report -->
 {% if summary %}
-<div class="bg-white/90 p-6 rounded-xl shadow-xl mb-8">
-  <h3 class="text-xl font-bold mb-4 text-blue-700">Summary Report</h3>
+<div class="bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl mb-8 border border-gray-200 dark:border-gray-700">
+  <h3 class="text-xl font-bold mb-4 text-blue-700 dark:text-blue-400">Summary Report</h3>
   <div class="overflow-x-auto">
     <table class="min-w-full rounded-xl shadow">
       <thead>
-        <tr class="bg-gray-300 text-blue-900">
+        <tr class="bg-gray-300 dark:bg-gray-700 text-blue-900 dark:text-blue-300">
           <th class="px-6 py-3 text-left font-semibold rounded-tl-xl">Category</th>
           <th class="px-6 py-3 text-left font-semibold">Mode</th>
           <th class="px-6 py-3 text-right font-semibold rounded-tr-xl">Total Amount</th>
@@ -102,10 +141,10 @@
       </thead>
       <tbody>
         {% for row in summary %}
-          <tr class="border-b hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition">
-            <td class="px-6 py-3 text-blue-700 font-medium">{{ row.category|capfirst }}</td>
-            <td class="px-6 py-3 text-purple-800 font-medium">{{ row.mode_of_payment|capfirst }}</td>
-            <td class="px-6 py-3 font-bold text-right {% if row.category|lower == 'sale' %}text-green-700{% else %}text-red-600{% endif %}">
+          <tr class="border-b hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition">
+            <td class="px-6 py-3 text-blue-700 dark:text-blue-300 font-medium">{{ row.category|capfirst }}</td>
+            <td class="px-6 py-3 text-purple-800 dark:text-purple-300 font-medium">{{ row.mode_of_payment|capfirst }}</td>
+            <td class="px-6 py-3 font-bold text-right {% if row.category|lower == 'sale' %}text-green-700 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
               ₹{{ row.total_amount }}
             </td>
           </tr>
@@ -118,35 +157,35 @@
 
     <!-- Transaction Log -->
     {% if logs %}
-      <div class="bg-white/90 p-6 rounded-xl shadow-xl max-h-[40rem] overflow-y-auto">
-        <h3 class="text-xl font-bold mb-4 text-purple-700">Transaction Log</h3>
+      <div class="bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl max-h-[40rem] overflow-y-auto border border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-bold mb-4 text-purple-700 dark:text-purple-400">Transaction Log</h3>
         <div class="space-y-2">
           {% for log in logs %}
-            <div class="bg-gradient-to-r from-gray-100 to-gray-100 rounded-xl p-4 mb-3 shadow transition hover:scale-[1.01] hover:shadow-lg">
+            <div class="bg-gradient-to-r from-gray-100 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 mb-3 shadow transition hover:scale-[1.01] hover:shadow-lg border border-gray-200 dark:border-gray-600">
               <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-                <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-1">
-                  <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">
+                <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <span class="inline-block px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-semibold">
                     {{ log.date|date:"d-m-Y" }}
                   </span>
-                  <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-semibold capitalize">
+                  <span class="inline-block px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold capitalize">
                     {{ log.type }}
                   </span>
-                  <span class="inline-block px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold capitalize">
+                  <span class="inline-block px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-semibold capitalize">
                     {{ log.mode_of_payment }}
                   </span>
                   {% if log.category %}
-                    <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 font-semibold capitalize">
+                    <span class="inline-block px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-semibold capitalize">
                       {{ log.category }}
                     </span>
                   {% endif %}
                 </div>
-                <div class="font-bold text-xl text-blue-700">
+                <div class="font-bold text-xl {% if log.type == 'sale' %}text-green-700 dark:text-green-400{% else %}text-red-700 dark:text-red-400{% endif %}">
                   ₹{{ log.amount }}
                 </div>
               </div>
             </div>
           {% empty %}
-            <p class="text-gray-400">No transactions found for this date.</p>
+            <p class="text-gray-400 dark:text-gray-500">No transactions found for this date.</p>
           {% endfor %}
         </div>
       </div>
@@ -154,7 +193,7 @@
 
     <!-- Back Button -->
     <div class="flex justify-center mt-10">
-        <a href="{% url 'home' %}" class="bg-white border shadow-md px-6 py-3 rounded-xl hover:bg-gray-100 hover:scale-110 hover:shadow-lg hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-700 transition">
+        <a href="{% url 'home' %}" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-md px-6 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-110 hover:shadow-lg hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-700 transition text-gray-800 dark:text-gray-200">
             ← Back to Home
           </a>
     </div>
